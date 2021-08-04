@@ -25,8 +25,8 @@ function usage()
 {
   echo "Usage:" 
   echo "  convert -i FILENAME"
-  echo "          [-s SIZE]"
-  echo "          [-a AUDIOBITRATE]"
+  echo "          [-s SIZE] (in Mb, ex. 80)"
+  echo "          [-a AUDIOBITRATE] (in k, es. 128)"
   echo "          [-w WIDTH [-h HEIGHT]]"
   echo "          [-o OUTFILE]"
 }
