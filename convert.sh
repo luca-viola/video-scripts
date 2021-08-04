@@ -8,11 +8,18 @@ SIZE=80
 HAS_W=0
 HAS_H=0
 
-#DURATION_FIELD_POS=9
-DURATION_FIELD_POS=13
-#DURATION_FIELD_POS=8
+OS=$(uname -s)
 
-THREADS=`grep -c ^processor /proc/cpuinfo`
+if [ "$OS" == "Darwin" ]; then
+  DURATION_FIELD_POS=13
+  THREADS=$(sysctl -n hw.ncpu)
+else
+  #DURATION_FIELD_POS=9
+  DURATION_FIELD_POS=13
+  #DURATION_FIELD_POS=8
+  THREADS=$(grep -c ^processor /proc/cpuinfo)
+fi
+
 
 function usage()
 {
