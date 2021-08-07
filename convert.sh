@@ -79,7 +79,7 @@ fi
 let "WH=$HAS_W ^ $HAS_H"
 
 if [ $WH == 1 ]; then
-  echo "The -w and -h options must be declared togheter."
+  echo "The -w and -h options must be declared together."
   exit
 fi
 
@@ -103,7 +103,7 @@ let "WEBBUFSIZEPASS2=(WEBMAXSIZEPASS2*2)"
 
 echo "Starting conversion"
 echo "Input:           $FILE"
-echo "Ouput:           $OUTFILE"
+echo "Output:           $OUTFILE"
 echo "Video width :    $W"
 echo "Video height:    $H"
 echo "Video duration:  $DURATION sec"
