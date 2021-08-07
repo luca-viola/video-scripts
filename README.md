@@ -5,7 +5,13 @@ Scripts to manipulate video files
 Convert takes a video file as an input, and using a 2-pass 
 ffmpeg encoding it can reduce it to a desired size in megabytes.
 Convert can also manipulate the final audio bitrate, and
-can resize the final video to a specified resolution,
+can resize the final video to a specified resolution.
+The command will try to detect the number of logical
+(hyperthreaded) CPUs on the machine and use it to speed up
+the process. The output will be an .mp4 and .webm files,
+the .mp4 will use the baseline profile and should be 
+playable out of the box from chrome, edge, safari and
+Android/iOS devices.
 
 ###Usage:
 ```
