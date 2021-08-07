@@ -8,6 +8,7 @@ __pycache__/
 
 hls/
 .idea/
+videos/
 
 # Distribution / packaging
 .Python
