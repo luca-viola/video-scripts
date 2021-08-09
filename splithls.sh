@@ -18,7 +18,7 @@ while getopts ":d:i:o:t:" opt; do
       duration=$OPTARG
       ;;
     i)
-      FILE=$OPTARG
+      filename=$OPTARG
       ;;
     o)
       out=$OPTARG
@@ -41,26 +41,21 @@ while getopts ":d:i:o:t:" opt; do
   esac
 done
 
-if [ -z "$FILE" ]; then
+if [ -z "$filename" ]; then
   usage
   exit 
 fi
 
-#ffmpeg -i $FILE -map 0  -codec:v libx264 -pix_fmt yuv420p -codec:a aac -f ssegment -segment_list ${playlist} -segment_list_flags +live -segment_time $duration ${out}%04d.ts
-
-
-#ffmpeg -i $FILE -c:v libx264 -crf 21 -preset veryfast -g 25 -sc_threshold 0 -c:a aac -b:a 128k -ac 2 -f hls -hls_time ${duration} -hls_playlist_type event ${playlist} 
-
-
-
-ffmpeg -i $FILE \
-    -filter_complex "[v:0]split=2[vtemp001][vout002];[vtemp001]scale=w=960:h=540[vout001]" \
+ffmpeg -i $filename \
+    -threads 8 \
+    -filter_complex "[v:0]split=3[vtemp001][vtemp002][vout003];[vtemp001]scale=w=640:h=360[vout001];[vtemp002]scale=w=1280:h=720[vout002]" \
     -preset veryfast -g 25 -sc_threshold 0 \
-    -map [vout001] -c:v:0 libx264 -b:v:0 2000k -maxrate:v:0 2200k -bufsize:v:0 3000k \
-    -map [vout002] -c:v:1 libx264 -b:v:1 6000k -maxrate:v:1 6600k -bufsize:v:1 8000k \
-    -map a:0 -map a:0 -c:a aac -b:a 128k -ac 2 \
+    -map [vout001] -c:v:0 libx264 -b:v:0 1000k -maxrate:v:0 1100k -bufsize:v:0 2000k \
+    -map [vout002] -c:v:1 libx264 -b:v:1 4000k -maxrate:v:1 4400k -bufsize:v:1 6000k \
+    -map [vout003] -c:v:2 libx264 -b:v:2 6000k -maxrate:v:2 6600k -bufsize:v:2 8000k \
+    -map a:0 -map a:0 -map a:0 -c:a aac -b:a 128k -ac 2 \
     -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \
     -master_pl_name master.m3u8 \
     -hls_segment_filename ${out}_%v/data%06d.ts \
     -use_localtime_mkdir 1 \
-    -var_stream_map "v:0,a:0 v:1,a:1" ${out}_%v.m3u8
+    -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2" ${out}_%v.m3u8
