@@ -46,10 +46,14 @@ if [ -z "$filename" ]; then
   exit 
 fi
 
+frame_rate=$(ffprobe -loglevel error -show_format -show_streams $filename -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
+fps=$(echo "scale=2; $frame_rate" | bc -l)
+
+
 ffmpeg -i $filename \
     -threads 8 \
     -filter_complex "[v:0]split=3[vtemp001][vtemp002][vout003];[vtemp001]scale=w=640:h=360[vout001];[vtemp002]scale=w=1280:h=720[vout002]" \
-    -preset veryfast -g 25 -sc_threshold 0 \
+    -preset veryfast -g ${frame_rate} -sc_threshold 0 \
     -map [vout001] -c:v:0 libx264 -b:v:0 1000k -maxrate:v:0 1100k -bufsize:v:0 2000k \
     -map [vout002] -c:v:1 libx264 -b:v:1 4000k -maxrate:v:1 4400k -bufsize:v:1 6000k \
     -map [vout003] -c:v:2 libx264 -b:v:2 6000k -maxrate:v:2 6600k -bufsize:v:2 8000k \
