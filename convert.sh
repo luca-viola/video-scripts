@@ -11,12 +11,8 @@ HAS_H=0
 OS=$(uname -s)
 
 if [ "$OS" == "Darwin" ]; then
-  DURATION_FIELD_POS=13
   THREADS=$(sysctl -n hw.ncpu)
 else
-  #DURATION_FIELD_POS=9
-  DURATION_FIELD_POS=13
-  #DURATION_FIELD_POS=8
   THREADS=$(grep -c ^processor /proc/cpuinfo)
 fi
 
@@ -93,9 +89,9 @@ else
   OUTFILE="$BASENAME"
 fi
 
-DURATION=`ffprobe -loglevel error -show_format -show_streams $FILE -print_format csv | grep format | cut -d "," -f ${DURATION_FIELD_POS} | cut -d "." -f 1`
+DURATION=$(ffprobe -loglevel error -show_format -show_streams $FILE -print_format flat | grep "format.duration=" | cut -d "\"" -f 2)
 
-let "VBR=((SIZE*8192)/DURATION)-ABR"
+VBR=$(echo "(($SIZE*8192)/$DURATION)-$ABR" | bc)
 let "BUFSIZE=(VBR*2)"
 
 let "WEBMAXSIZEPASS2=(VBR+ABR)"
@@ -103,7 +99,7 @@ let "WEBBUFSIZEPASS2=(WEBMAXSIZEPASS2*2)"
 
 echo "Starting conversion"
 echo "Input:           $FILE"
-echo "Output:           $OUTFILE"
+echo "Output:          $OUTFILE"
 echo "Video width :    $W"
 echo "Video height:    $H"
 echo "Video duration:  $DURATION sec"
@@ -122,10 +118,12 @@ ffmpeg -y -i $FILE -c:v libx264 -profile:v baseline -b:v "$VBR"k -pass 1 -an -s 
 
 ffmpeg -i $FILE -c:v libx264 -profile:v baseline -b:v "$VBR"k -s "$W"x"$H" -pass 2 -pix_fmt yuv420p -strict -2 -c:a aac -b:a "$ABR"k -movflags faststart -threads $THREADS "$OUTFILE".mp4
 
-echo "********************************************"
-echo "*********** GENERATING WEBM FILE ***********"
-echo "********************************************"
+if [ $webm == "1" ]; then
+  echo "********************************************"
+  echo "*********** GENERATING WEBM FILE ***********"
+  echo "********************************************"
 
-ffmpeg -i $FILE  -codec:v libvpx -quality good -cpu-used 0 -b:v "$VBR"k -qmin 10 -qmax 42 -maxrate "$VBR"k -bufsize "$BUFSIZE"k -vf scale=$W:$H -an -pass 1 -threads $THREADS -f webm /dev/null
+  ffmpeg -i $FILE  -codec:v libvpx -quality good -cpu-used 0 -b:v "$VBR"k -qmin 10 -qmax 42 -maxrate "$VBR"k -bufsize "$BUFSIZE"k -vf scale=$W:$H -an -pass 1 -threads $THREADS -f webm /dev/null
 
-ffmpeg -i $FILE -codec:v libvpx -quality good -cpu-used 0 -b:v "$VBR"k -qmin 10 -qmax 42 -maxrate "$WEBMAXSIZEPASS2"k -bufsize "$WEBBUFSIZEPASS2"k -threads $THREADS -vf scale=$W:$H -codec:a libvorbis -b:a "$ABR"k -pass 2 -f webm "$OUTFILE".webm
+  ffmpeg -i $FILE -codec:v libvpx -quality good -cpu-used 0 -b:v "$VBR"k -qmin 10 -qmax 42 -maxrate "$WEBMAXSIZEPASS2"k -bufsize "$WEBBUFSIZEPASS2"k -threads $THREADS -vf scale=$W:$H -codec:a libvorbis -b:a "$ABR"k -pass 2 -f webm "$OUTFILE".webm
+fi
