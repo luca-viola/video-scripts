@@ -27,9 +27,11 @@ bitstr2=$(echo "(640*360*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
 bitstr3=$(echo "(852*480*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
 bitstr4=$(echo "(1280*720*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
 bitstr5=$(echo "(1920*1080*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
+bitstr6=$(echo "(2704*1524*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
 
 echo $bitstr1
 echo $bitstr2
 echo $bitstr3
 echo $bitstr4
 echo $bitstr5
+echo $bitstr6

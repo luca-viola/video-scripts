@@ -56,7 +56,7 @@ ffmpeg -i $filename \
     -preset veryfast -g ${frame_rate} -sc_threshold 0 \
     -map [vout001] -c:v:0 libx264 -b:v:0 1000k -maxrate:v:0 1100k -bufsize:v:0 2000k \
     -map [vout002] -c:v:1 libx264 -b:v:1 4000k -maxrate:v:1 4400k -bufsize:v:1 6000k \
-    -map [vout003] -c:v:2 libx264 -b:v:2 6000k -maxrate:v:2 6600k -bufsize:v:2 8000k \
+    -map [vout003] -c:v:2 libx264 -b:v:2 12000k -maxrate:v:2 13200k -bufsize:v:2 16000k \
     -map a:0 -map a:0 -map a:0 -c:a aac -b:a 128k -ac 2 \
     -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \
     -master_pl_name master.m3u8 \
