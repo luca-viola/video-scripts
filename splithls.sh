@@ -4,6 +4,15 @@ playlist="playlist.m3u8"
 duration=6
 out="stream"
 
+OS=$(uname -s)
+
+if [ "$OS" == "Darwin" ]; then
+  threads=$(sysctl -n hw.ncpu)
+else
+  threads=$(grep -c ^processor /proc/cpuinfo)
+fi
+
+
 function usage()
 {
   echo "Usage:" 
@@ -24,7 +33,7 @@ while getopts ":d:i:o:t:" opt; do
       out=$OPTARG
       ;;
     t)
-      THREADS=$OPTARG
+      threads=$OPTARG
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -47,11 +56,10 @@ if [ -z "$filename" ]; then
 fi
 
 frame_rate=$(ffprobe -loglevel error -show_format -show_streams $filename -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
-fps=$(echo "scale=2; $frame_rate" | bc -l)
 
 
 ffmpeg -i $filename \
-    -threads 8 \
+    -threads $threads \
     -filter_complex "[v:0]split=3[vtemp001][vtemp002][vout003];[vtemp001]scale=w=640:h=360[vout001];[vtemp002]scale=w=1280:h=720[vout002]" \
     -preset veryfast -g ${frame_rate} -sc_threshold 0 \
     -map [vout001] -c:v:0 libx264 -b:v:0 1000k -maxrate:v:0 1100k -bufsize:v:0 2000k \

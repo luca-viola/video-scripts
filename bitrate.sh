@@ -13,25 +13,46 @@ frame_rate=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format
 
 fps=$(echo "scale=2; $frame_rate" | bc -l)
 
+ratio=$(echo "$width/$height" | bc -l)
+
 echo "Width  : $width"
 echo "Height : $height"
 echo "bitrate: $bitrate"
 echo "fps    : $fps"
+echo "ratio  : $ratio"
 
 bpp=$(echo "scale=2; $_bitrate/($width*$height*$frame_rate)" | bc -l)
 
 echo "bpp    : $bpp"
 
-bitstr1=$(echo "(426*240*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
-bitstr2=$(echo "(640*360*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
-bitstr3=$(echo "(852*480*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
-bitstr4=$(echo "(1280*720*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
-bitstr5=$(echo "(1920*1080*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
-bitstr6=$(echo "(2704*1524*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
+ratio=$(echo "$width/$height" | bc -l)
 
-echo $bitstr1
-echo $bitstr2
-echo $bitstr3
-echo $bitstr4
-echo $bitstr5
-echo $bitstr6
+declare -a p_res 
+p_res=(240 360 480 720 1080 1440 2160)
+
+declare -a h_res
+
+i=0
+for v in ${p_res[@]}
+do
+  h_res[$i]=$(echo "$v*$ratio" | bc | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}')
+  let "i=i+1"
+done
+
+declare -a bitstr
+
+i=0
+for b in ${p_res[@]}
+do
+  bitstr[$i]=$(echo "(${h_res[i]}*${p_res[i]}*${fps}*${_bpp}/1000)+${audio_bit_rate}" | bc)
+  let "i=i+1"
+done
+
+i=0
+for h in ${p_res[@]}
+do
+  if [[ $( echo "$height-$h" | bc ) -ge 0 ]]; then
+    echo "${h_res[i]}x${h}p   : ${bitstr[i]}"
+  fi
+  let "i=i+1"
+done
