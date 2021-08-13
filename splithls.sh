@@ -3,15 +3,23 @@
 playlist="playlist.m3u8"
 duration=6
 out="stream"
+target_bpp=0.1
+audio_bit_rate=128
+def_vertical_res=(240 360 480 720 1080 1440 2160)
+declare -a vertical_res
+declare -a horizontal_res
+declare -a bit_rates
 
-OS=$(uname -s)
+function detect_threads()
+{
+  OS=$(uname -s)
 
-if [ "$OS" == "Darwin" ]; then
-  threads=$(sysctl -n hw.ncpu)
-else
-  threads=$(grep -c ^processor /proc/cpuinfo)
-fi
-
+  if [ "$OS" == "Darwin" ]; then
+    threads=$(sysctl -n hw.ncpu)
+  else
+    threads=$(grep -c ^processor /proc/cpuinfo)
+  fi
+}
 
 function usage()
 {
@@ -19,6 +27,185 @@ function usage()
   echo "  splithls -i FILENAME"
   echo "          [-d DURATION] (in seconds per segment, ex. -d 6)"
   echo "          [-o SEGMENTS BASENAME] (ex. -o out)"
+}
+
+function get_video_stats()
+{
+  width=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "\.width=" | cut -d "=" -f 2)
+  height=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "\.height=" | cut -d "=" -f 2)
+
+  bitrate_bytes=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "format.bit_rate=" | cut -d "\"" -f 2)
+  bitrate=$(echo "${bitrate_bytes}/1024" | bc)
+
+  frame_rate=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
+  fps=$(echo "scale=2; $frame_rate" | bc -l)
+
+  ratio=$(echo "$width/$height" | bc -l)
+  bpp=$(echo "scale=2; $bitrate_bytes/($width*$height*$frame_rate)" | bc -l)
+}
+
+function exclude_vertical_resolutions_bigger_than_default_ones()
+{
+  split=0
+  #declare -a vertical_res
+  for h in "${def_vertical_res[@]}"
+  do
+    if [[ $( echo "$height-$h" | bc ) -ge 0 ]]; then
+      vertical_res[$split]=$h
+      ((split=split+1))
+    fi
+  done
+}
+
+function calculate_horizontal_resolutions_with_aspect_ratio()
+{
+#  declare -a horizontal_res
+
+  i=0
+  for v in "${vertical_res[@]}"
+  do
+    num=$(echo "$v*$ratio" | bc | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}')
+    (( num++ ))
+    num=$(( $num - ($num %2) ))
+    horizontal_res[$i]=$num
+    ((i=i+1))
+  done
+}
+
+function calculate_bit_rates()
+{
+  #declare -a bit_rates
+
+  i=0
+  for b in "${vertical_res[@]}"
+  do
+    bit_rates[$i]=$(echo "(${horizontal_res[i]}*${vertical_res[i]}*${fps}*${target_bpp}/1000)+${audio_bit_rate}" | bc)
+    ((i=i+1))
+  done
+}
+
+
+function print_bit_rates_stats()
+{
+  i=0
+  for h in "${vertical_res[@]}"
+  do
+    if [[ $( echo "$height-$h" | bc ) -ge 0 ]]; then
+      echo "${horizontal_res[i]}x${h}p   : ${bit_rates[i]}k"
+    fi
+    ((i=i+1))
+  done
+}
+
+
+function generate_filters_to_resize_videos()
+{
+  filter_complex="[v:0]split=${split}"
+
+  i=0
+  filter=""
+  for h in "${vertical_res[@]}"
+  do
+    pad=$(printf "%03d" $i)
+    filter="${filter}[vtemp${pad}]"
+    ((i=i+1))
+  done
+
+  filter_complex="$filter_complex${filter};"
+
+  i=0
+  filter=""
+  for h in "${vertical_res[@]}"
+  do
+    pad1=$(printf "%03d" $i)
+    pad2=$(printf "%03d" $i)
+    filter="${filter}[vtemp${pad1}]scale=w=${horizontal_res[i]}:h=${vertical_res[i]}[vout${pad2}];"
+    ((i=i+1))
+  done
+
+  filter_complex="$filter_complex${filter}"
+  filter_complex=${filter_complex::-1}
+}
+#echo "$filter_complex"
+
+function maps_filters_to_bitrates()
+{
+  i=0
+  map=""
+  nl=$'\n'
+  for h in "${vertical_res[@]}"
+  do
+    pad=$(printf "%03d" $i)
+    max_rate=$( echo "${bit_rates[i]}+(${bit_rates[i]}*10/100)" | bc)
+    buf_size=$( echo "${bit_rates[i]}*1.5" | bc | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}')
+
+    map="-map [vout${pad}] -c:v:${i} libx264 -b:v:${i} ${bit_rates[i]}k -maxrate:v:0 ${max_rate}k -bufsize:v:${i} ${buf_size}k"
+    line="${map} \\${nl}"
+    lines="${lines}${line}"
+    ((i=i+1))
+  done
+}
+#echo "$lines"
+
+function generate_audio_and_stream_maps()
+{
+  i=0
+  audio_map=""
+  stream_map=""
+  for h in "${vertical_res[@]}"
+  do
+    audio_map="${audio_map} -map a:0"
+    stream_map="${stream_map} v:${i},a:${i}"
+    ((i=i+1))
+  done
+  audio_map="${audio_map} -c:a aac -b:a 128k -ac 2"
+}
+
+#echo $audio_map
+#echo $stream_map
+function print_stats()
+{
+  echo "Width  : $width"
+  echo "Height : $height"
+  echo "bitrate: $bitrate"
+  echo "fps    : $fps"
+  echo "ratio  : $ratio"
+  echo "bpp    : $bpp"
+  echo "-------------"
+  print_bit_rates_stats
+}
+
+function main()
+{
+  if [ -z "$filename" ]; then
+    usage
+    exit
+  fi
+
+  detect_threads
+  get_video_stats $1
+  exclude_vertical_resolutions_bigger_than_default_ones
+  calculate_horizontal_resolutions_with_aspect_ratio
+  calculate_bit_rates
+  generate_filters_to_resize_videos
+  maps_filters_to_bitrates
+  generate_audio_and_stream_maps
+
+  cmd="ffmpeg -i \"$filename\" \\
+      -threads $threads \\
+      -filter_complex \"$filter_complex\" \\
+      -preset veryfast -g ${frame_rate} -sc_threshold 0 \\
+       ${lines} \\
+       ${audio_map} \\
+      -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \\
+      -master_pl_name master.m3u8 \\
+      -hls_segment_filename ${out}_%v/data%06d.ts \\
+      -use_localtime_mkdir 1 \\
+      -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
+
+  sh -c "$cmd"
+
+  print_stats
 }
 
 while getopts ":d:i:o:t:" opt; do
@@ -50,23 +237,4 @@ while getopts ":d:i:o:t:" opt; do
   esac
 done
 
-if [ -z "$filename" ]; then
-  usage
-  exit 
-fi
-
-frame_rate=$(ffprobe -loglevel error -show_format -show_streams $filename -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
-
-ffmpeg -i $filename \
-    -threads $threads \
-    -filter_complex "[v:0]split=3[vtemp001][vtemp002][vout003];[vtemp001]scale=w=640:h=360[vout001];[vtemp002]scale=w=1280:h=720[vout002]" \
-    -preset veryfast -g ${frame_rate} -sc_threshold 0 \
-    -map [vout001] -c:v:0 libx264 -b:v:0 1000k -maxrate:v:0 1100k -bufsize:v:0 2000k \
-    -map [vout002] -c:v:1 libx264 -b:v:1 4000k -maxrate:v:1 4400k -bufsize:v:1 6000k \
-    -map [vout003] -c:v:2 libx264 -b:v:2 12000k -maxrate:v:2 13200k -bufsize:v:2 16000k \
-    -map a:0 -map a:0 -map a:0 -c:a aac -b:a 128k -ac 2 \
-    -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \
-    -master_pl_name master.m3u8 \
-    -hls_segment_filename ${out}_%v/data%06d.ts \
-    -use_localtime_mkdir 1 \
-    -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2" ${out}_%v.m3u8
+main $filename
