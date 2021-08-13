@@ -57,7 +57,6 @@ fi
 
 frame_rate=$(ffprobe -loglevel error -show_format -show_streams $filename -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
 
-
 ffmpeg -i $filename \
     -threads $threads \
     -filter_complex "[v:0]split=3[vtemp001][vtemp002][vout003];[vtemp001]scale=w=640:h=360[vout001];[vtemp002]scale=w=1280:h=720[vout002]" \
