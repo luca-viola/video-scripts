@@ -204,9 +204,11 @@ function main()
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
 
-  #sh -c "$cmd"
-echo "$cmd"
+  sh -c "$cmd"
+  echo "************"
   print_stats
+  echo "************"
+  echo "$cmd"
 }
 
 while getopts ":d:i:o:t:" opt; do
