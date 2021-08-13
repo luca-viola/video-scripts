@@ -79,7 +79,7 @@ function calculate_bit_rates()
   i=0
   for b in "${vertical_res[@]}"
   do
-    bit_rates[$i]=$(echo "(${horizontal_res[i]}*${vertical_res[i]}*${fps}*${target_bpp}/1000)+${audio_bit_rate}" | bmaster.m3u8c)
+    bit_rates[$i]=$(echo "(${horizontal_res[i]}*${vertical_res[i]}*${fps}*${target_bpp}/1000)+${audio_bit_rate}" | bc)
     ((i=i+1))
   done
 }
@@ -124,7 +124,7 @@ function generate_filters_to_resize_videos()
   done
 
   filter_complex="$filter_complex${filter}"
-  filter_complex=${filter_complex::-1}
+  filter_complex=${filter_complex%?}
 }
 #echo "$filter_complex"
 
@@ -144,6 +144,7 @@ function maps_filters_to_bitrates()
     lines="${lines}${line}"
     ((i=i+1))
   done
+  lines=${lines%??}
 }
 #echo "$lines"
 
@@ -203,8 +204,8 @@ function main()
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
 
-  sh -c "$cmd"
-
+  #sh -c "$cmd"
+echo "$cmd"
   print_stats
 }
 
