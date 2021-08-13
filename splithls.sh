@@ -1,6 +1,6 @@
 #!/bin/bash
 
-playlist="playlist.m3u8"
+playlist="master.m3u8"
 duration=6
 out="stream"
 target_bpp=0.1
@@ -31,13 +31,13 @@ function usage()
 
 function get_video_stats()
 {
-  width=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "\.width=" | cut -d "=" -f 2)
-  height=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "\.height=" | cut -d "=" -f 2)
+  width=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "\.width=" | cut -d "=" -f 2)
+  height=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "\.height=" | cut -d "=" -f 2)
 
-  bitrate_bytes=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "format.bit_rate=" | cut -d "\"" -f 2)
+  bitrate_bytes=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "format.bit_rate=" | cut -d "\"" -f 2)
   bitrate=$(echo "${bitrate_bytes}/1024" | bc)
 
-  frame_rate=$(ffprobe -loglevel error -show_format -show_streams $1 -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
+  frame_rate=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
   fps=$(echo "scale=2; $frame_rate" | bc -l)
 
   ratio=$(echo "$width/$height" | bc -l)
@@ -79,7 +79,7 @@ function calculate_bit_rates()
   i=0
   for b in "${vertical_res[@]}"
   do
-    bit_rates[$i]=$(echo "(${horizontal_res[i]}*${vertical_res[i]}*${fps}*${target_bpp}/1000)+${audio_bit_rate}" | bc)
+    bit_rates[$i]=$(echo "(${horizontal_res[i]}*${vertical_res[i]}*${fps}*${target_bpp}/1000)+${audio_bit_rate}" | bmaster.m3u8c)
     ((i=i+1))
   done
 }
@@ -198,7 +198,7 @@ function main()
        ${lines} \\
        ${audio_map} \\
       -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \\
-      -master_pl_name master.m3u8 \\
+      -master_pl_name ${playlist} \\
       -hls_segment_filename ${out}_%v/data%06d.ts \\
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
@@ -237,4 +237,4 @@ while getopts ":d:i:o:t:" opt; do
   esac
 done
 
-main $filename
+main "$filename"
