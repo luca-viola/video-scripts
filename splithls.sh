@@ -30,6 +30,8 @@ function usage()
   echo "                              (ex. -b 0.4  - for high movement, racing )"
   echo "                              (ex. -b 0.06 - for low movement, static imgs)"
   echo "              higher bpp means higher quality and larger files [default: 0.1]"
+  echo "          [-p \"res1 res2 .. resn\"] (vertical resolutions, es. \"240 720 1080\")"
+  echo "              [default: \"240 360 480 720 1080 1440 2160\"]"
   echo "          [-d DURATION] (in seconds per segment, ex. -d 6)"
   echo "          [-o SEGMENTS BASENAME] (ex. -o \"out\") [default: \"stream\"]"
 }
@@ -216,7 +218,7 @@ function main()
   echo "$cmd"
 }
 
-while getopts ":a:b:d:i:o:t:" opt; do
+while getopts ":a:b:d:i:o:t:p:" opt; do
   case $opt in
     d)
       duration=$OPTARG
@@ -235,6 +237,14 @@ while getopts ":a:b:d:i:o:t:" opt; do
       ;;
     t)
       threads=$OPTARG
+      ;;
+    p)
+      vres=$OPTARG
+
+      def_vertical_res=()
+      for i in $vres; do
+        def_vertical_res+=($i)
+      done
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2

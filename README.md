@@ -24,12 +24,31 @@ Android/iOS devices.
 
 ## splithls
 Splithls takes a video file in input and generates Http
-Live Streaming data segements, with a specified duration
+Live Streaming data segments, with a specified duration
 (default 6 seconds per segment, per Apple specification)
-This will also generate a master m3u8 playlist, and many
+It will  generate a master m3u8 playlist, and many
 streams with different bitrates and related folder
 structure. The "-o" parameters specifies the baseline
 name for the output streams, can be chosen arbitrarily.
+
+The script generates streams for the most common
+vertical  resolutions (default: 240p, 360p, 480p, 720p,
+1080p, 1440p, 2160p) and will calculate suitable bit rates
+for each of them. The resolution list can be overridden 
+with the flag **-p**.
+
+The general quality can be affected with the **-b** 
+option that will set the expected *bits per pixel*:
+this number will influence the bitrate calculation.
+
+Some common values of bit per pixels are:
+
+| BPP          | Video types and characteristics                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------|
+| 0.06 or less | Low motion, static images, slideshows, no sharp scene changes => low bitrates, smaller file sizes.     |
+| 0.1          | Average motion, smooth scene changes, low speed => good in most cases, files get smaller than original |
+| 0.3 or more  | Fast motion, high speed, sharp scene changes, racing, sports => best quality, files tend to be larger  |
+
 
 ### Usage:
 ```
@@ -40,7 +59,9 @@ Usage:
                               (ex. -b 0.4  - for high movement, racing )
                               (ex. -b 0.06 - for low movement, static imgs)
               higher bpp means higher quality and larger files [default: 0.1]
+          [-p "res1 res2 .. resn"] (vertical resolutions, es. "240 720 1080")
+              [default: "240 360 480 720 1080 1440 2160"]
           [-d DURATION] (in seconds per segment, ex. -d 6)
-          [-o SEGMENTS BASENAME] (ex. -o \"out\") [default: \"stream\"]
+          [-o SEGMENTS BASENAME] (ex. -o "out") [default: "stream"]
 ```
 
