@@ -25,8 +25,13 @@ function usage()
 {
   echo "Usage:" 
   echo "  splithls -i FILENAME"
+  echo "          [-a audiorATE] (in k, ex. -a 128) [default: 128]"
+  echo "          [-b bits per pixel] (ex. -b 0.1  - for avg movement, slideshows)"
+  echo "                              (ex. -b 0.4  - for high movement, racing )"
+  echo "                              (ex. -b 0.06 - for low movement, static imgs)"
+  echo "              higher bpp means higher quality and larger files [default: 0.1]"
   echo "          [-d DURATION] (in seconds per segment, ex. -d 6)"
-  echo "          [-o SEGMENTS BASENAME] (ex. -o out)"
+  echo "          [-o SEGMENTS BASENAME] (ex. -o \"out\") [default: \"stream\"]"
 }
 
 function get_video_stats()
@@ -211,10 +216,16 @@ function main()
   echo "$cmd"
 }
 
-while getopts ":d:i:o:t:" opt; do
+while getopts ":a:b:d:i:o:t:" opt; do
   case $opt in
     d)
       duration=$OPTARG
+      ;;
+    a)
+      audio_bit_rate=$OPTARG
+      ;;
+    b)
+      target_bpp=$OPTARG
       ;;
     i)
       filename=$OPTARG
