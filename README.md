@@ -1,6 +1,15 @@
 # video-scripts
 Scripts to manipulate video files
 
+## Prerequisites
+To use these scripts you need to have installed the ffmpeg
+package, and to have ffprobe in the path (usually comes with
+ffmpeg). The scripts make usage of bash and some unix tools
+(awk, bc, etc).
+Tests have been made against MacOS Big Sur and Fedora 33,
+the scripts work against bash version 3 (as found on MacOS)
+or higher.
+
 ## convert
 Convert takes a video file as an input, and using a 2-pass 
 ffmpeg encoding it can reduce it to a desired size in megabytes.
