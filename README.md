@@ -72,4 +72,19 @@ Usage:
           [-d DURATION] (in seconds per segment, ex. -d 6)
           [-o SEGMENTS BASENAME] (ex. -o "out") [default: "stream"]
 ```
+### Examples:
+
+`splithls -i file.mp4`
+
+Creates an hls master playlist with all the default vertical
+resolutions, segments duration at 6 seconds default, and
+0.1 bit per pixels default.
+
+`splithls -i file.mp4 -d 4 -b 0.06 -p "360 720 1080"`
+
+Creates an hls master playlist with three streams of
+360p, 720p, 1080p. The segment duration is 4 seconds and
+the quality is set for a video with low motion and no 
+frequent drastic scene changes.
+
 
