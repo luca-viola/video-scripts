@@ -35,7 +35,15 @@ The script generates streams for the most common
 vertical  resolutions (default: 240p, 360p, 480p, 720p,
 1080p, 1440p, 2160p) and will calculate suitable bit rates
 for each of them. The resolution list can be overridden 
-with the flag **-p**.
+with the flag **-p**. The script will calculate proper
+horizontal resolutions to maintain aspect ratio, and
+will round them to the nearest even number to avoid
+errors with ffmpeg. It will use information from the
+original video to do this. It will also keep the same
+frame rate as the original video, to keep the playing
+smooth. With all this information it will generate
+the ffmpeg filters and video/audio stream maps to 
+create HLS streams at different resolutions.
 
 The general quality can be affected with the **-b** 
 option that will set the expected *bits per pixel*:
