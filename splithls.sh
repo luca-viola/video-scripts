@@ -24,8 +24,8 @@ function detect_threads()
 function usage()
 {
   echo "Usage:" 
-  echo "  splithls -i FILENAME"
-  echo "          [-a audiorATE] (in k, ex. -a 128) [default: 128]"
+  echo "  splithls -i /path/to/file"
+  echo "          [-a audiorate] (in k, ex. -a 128) [default: 128]"
   echo "          [-b bits per pixel] (ex. -b 0.1  - for avg movement, slideshows)"
   echo "                              (ex. -b 0.4  - for high movement, racing )"
   echo "                              (ex. -b 0.06 - for low movement, static imgs)"
@@ -177,7 +177,7 @@ function print_stats()
   echo "fps    : $fps"
   echo "ratio  : $ratio"
   echo "bpp    : $bpp"
-  echo "-------------"
+  echo "***************"
   print_bit_rates_stats
 }
 
@@ -209,6 +209,7 @@ function main()
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
   sh -c "$cmd"
+  echo
   echo "************"
   print_stats
   echo "************"

@@ -26,15 +26,21 @@ Android/iOS devices.
 Splithls takes a video file in input and generates Http
 Live Streaming data segements, with a specified duration
 (default 6 seconds per segment, per Apple specification)
-This will also generate a master m3u8 playlist, and two
+This will also generate a master m3u8 playlist, and many
 streams with different bitrates and related folder
 structure. The "-o" parameters specifies the baseline
-name for the output streams, can be chosen aarbitrarily.
+name for the output streams, can be chosen arbitrarily.
 
 ### Usage:
 ```
-splithls -i FILENAME
+Usage:
+  splithls -i /path/to/file
+          [-a audiorate] (in k, ex. -a 128) [default: 128]
+          [-b bits per pixel] (ex. -b 0.1  - for avg movement, slideshows)
+                              (ex. -b 0.4  - for high movement, racing )
+                              (ex. -b 0.06 - for low movement, static imgs)
+              higher bpp means higher quality and larger files [default: 0.1]
           [-d DURATION] (in seconds per segment, ex. -d 6)
-          [-o SEGMENTS BASENAME] (ex. -o out)
+          [-o SEGMENTS BASENAME] (ex. -o \"out\") [default: \"stream\"]
 ```
 
