@@ -208,7 +208,6 @@ function main()
       -hls_segment_filename ${out}_%v/data%06d.ts \\
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
-
   sh -c "$cmd"
   echo "************"
   print_stats
