@@ -47,6 +47,8 @@ function get_video_stats()
   frame_rate=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
   fps=$(echo "scale=2; $frame_rate" | bc -l)
 
+  video_duration=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "format.duration=" | cut -d "\"" -f 2)
+
   ratio=$(echo "$width/$height" | bc -l)
   bpp=$(echo "scale=2; $bitrate_bytes/($width*$height*$frame_rate)" | bc -l)
 }
@@ -173,14 +175,28 @@ function generate_audio_and_stream_maps()
 #echo $stream_map
 function print_stats()
 {
+  echo "--- $filename stats ---"
   echo "Width  : $width"
   echo "Height : $height"
   echo "bitrate: $bitrate"
   echo "fps    : $fps"
   echo "ratio  : $ratio"
   echo "bpp    : $bpp"
-  echo "***************"
+  echo
+  echo "--- Target bit rates ---"
   print_bit_rates_stats
+}
+
+function progress()
+{
+  sleep 1
+  segments=$(echo "$video_duration/$duration" | bc)
+  current=0
+  while [[ $current -le $segments ]]; do
+    current=$(ls -b stream_0 | cut -d "." -f 1 | awk '{print substr($0,5) }' | sort -n | tail -n 1 | bc)
+    echo -e -n "\rSegment generation progress: $current / $segments"
+  done
+  echo
 }
 
 function main()
@@ -199,7 +215,16 @@ function main()
   maps_filters_to_bitrates
   generate_audio_and_stream_maps
 
+  echo "* Splithls (C) by Luca Viola *"
+  echo
+  print_stats
+  echo
+  progress &
+  pid=$!
+
   cmd="ffmpeg -i \"$filename\" \\
+      -hide_banner \\
+      -loglevel panic \\
       -threads $threads \\
       -filter_complex \"$filter_complex\" \\
       -preset veryfast -g ${frame_rate} -sc_threshold 0 \\
@@ -211,11 +236,9 @@ function main()
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
   sh -c "$cmd"
+  #echo "$cmd"
+  kill -15 $pid
   echo
-  echo "************"
-  print_stats
-  echo "************"
-  echo "$cmd"
 }
 
 while getopts ":a:b:d:i:o:t:p:" opt; do
