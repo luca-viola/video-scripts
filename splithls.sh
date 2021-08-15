@@ -199,6 +199,7 @@ function progress()
   while [[ $current -le $segments ]]; do
     current=$(ls -b stream_0 | cut -d "." -f 1 | awk '{print substr($0,5) }' | sort -n | tail -n 1 | bc)
     echo -e -n "\rSegment generation progress: $current / $segments"
+    sleep 1
   done
   echo
 }
