@@ -32,8 +32,10 @@ function usage()
   echo "              higher bpp means higher quality and larger files [default: 0.1]"
   echo "          [-p \"res1 res2 .. resn\"] (vertical resolutions, es. \"240 720 1080\")"
   echo "              [default: \"240 360 480 720 1080 1440 2160\"]"
-  echo "          [-d DURATION] (in seconds per segment, ex. -d 6)"
-  echo "          [-o SEGMENTS BASENAME] (ex. -o \"out\") [default: \"stream\"]"
+  echo "          [-d duration] (in seconds per segment, ex. -d 6)"
+  echo "          [-r frame rate] (in frames per second, ex: -r 23.976023976)"
+  echo "              [default: same as original video]"
+  echo "          [-o segments basename] (ex. -o \"out\") [default: \"stream\"]"
 }
 
 function get_video_stats()

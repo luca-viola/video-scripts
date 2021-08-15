@@ -10,6 +10,7 @@ hls/
 .idea/
 videos/
 .DS_Store
+*.swp
 
 # Distribution / packaging
 .Python

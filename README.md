@@ -67,7 +67,24 @@ will round them to the nearest even number to avoid
 errors with ffmpeg. It will use information from the
 original video to do this. It will also keep the same
 frame rate as the original video, to keep the playing
-smooth. With all this information it will generate
+smooth. You can change the framerate with the "-r" 
+option, a good rule is to avoid changing the frame rate
+to avoid bumpyness: if you have to do it better to
+do divisions by integers, where for example 50 fps 
+becomes 25 fps, or 47.952047952 becomes 23.976023976
+(hence dividing by integer 2). A framerate under 23/24
+will look "cranky"and  way less fluid to the eyes.
+The "-r" option support also decimals and known fractional
+representations, such as:
+
+```
+-r 30000/1001 (or 29.97002997)
+-r 24000/1001 (or 23.976023976)
+-r 23.976023976
+-r 25 
+```
+
+With all of this information splithls will generate
 the ffmpeg filters and video/audio stream maps to 
 create HLS streams at different resolutions.
 
@@ -95,8 +112,10 @@ Usage:
               higher bpp means higher quality and larger files [default: 0.1]
           [-p "res1 res2 .. resn"] (vertical resolutions, es. "240 720 1080")
               [default: "240 360 480 720 1080 1440 2160"]
-          [-d DURATION] (in seconds per segment, ex. -d 6)
-          [-o SEGMENTS BASENAME] (ex. -o "out") [default: "stream"]
+          [-d duration] (in seconds per segment, ex. -d 6)
+          [-r frame rate] (in frames per second, ex: -r 23.976023976)
+              [default: same as original video]
+          [-o segments base name] (ex. -o "out") [default: "stream"]
 ```
 ### Examples:
 
