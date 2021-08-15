@@ -16,9 +16,10 @@ ffmpeg encoding it can reduce it to a desired size in megabytes.
 Convert can also manipulate the final audio bitrate, and
 can resize the final video to a specified resolution.
 The command will try to detect the number of logical
-(hyperthreaded) CPUs on the machine and use it to speed up
-the process. The output will be an .mp4 and .webm files,
-the .mp4 will use the baseline profile and should be 
+(hyper threaded) CPUs on the machine and use it to speed up
+the process. The output will be an .mp4 file (and, setting the
+environment  variable `webm=1` before launching it .webm also).
+The .mp4 will use the baseline profile and should be 
 playable out of the box from chrome, edge, safari and
 Android/iOS devices.
 
@@ -30,6 +31,22 @@ Android/iOS devices.
           [-w WIDTH [-h HEIGHT]]
           [-o OUTFILE]
 ```
+### Examples:
+`convert.sh -i /path/to/file -s 120 -w 1280 -h 720 -o out.mp4`
+
+Takes **file** and runs a two pass encoding to shrink it to a
+size of 120 Mb and a resolution of 1280x720 pixel. The output
+will be called `out.mp4` and only an mp4 file will be generated.
+
+`webm=1 ; convert.sh -i /path/to/file -s 150 -o out`
+
+Takes **file** and runs a two pass encoding to shrink it to a
+size of 150 Mb with the original video resolution. The outputs
+will be called `out.mp4` and `out.webm`.
+
+#### Notice:
+the final size of .webm files sometimes might be slightly larger
+than the specified target size.
 
 ## splithls
 Splithls takes a video file in input and generates Http
