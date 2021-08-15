@@ -44,7 +44,9 @@ function get_video_stats()
   bitrate_bytes=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "format.bit_rate=" | cut -d "\"" -f 2)
   bitrate=$(echo "${bitrate_bytes}/1024" | bc)
 
-  frame_rate=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
+  if [ -z $frame_rate ]; then 
+    frame_rate=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "r_frame_rate=" | cut -d "\"" -f 2 | head -1)
+  fi
   fps=$(echo "scale=2; $frame_rate" | bc -l)
 
   video_duration=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "format.duration=" | cut -d "\"" -f 2)
@@ -227,7 +229,7 @@ function main()
       -loglevel panic \\
       -threads $threads \\
       -filter_complex \"$filter_complex\" \\
-      -preset veryfast -g ${frame_rate} -sc_threshold 0 \\
+      -preset veryfast -r ${frame_rate} -g ${frame_rate} -sc_threshold 0 \\
        ${lines} \\
        ${audio_map} \\
       -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \\
@@ -235,13 +237,14 @@ function main()
       -hls_segment_filename ${out}_%v/data%06d.ts \\
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
+  echo "$cmd" > cmd.log
   sh -c "$cmd"
   #echo "$cmd"
   kill -15 $pid
   echo
 }
 
-while getopts ":a:b:d:i:o:t:p:" opt; do
+while getopts ":r:a:b:d:i:o:t:p:" opt; do
   case $opt in
     d)
       duration=$OPTARG
@@ -257,6 +260,9 @@ while getopts ":a:b:d:i:o:t:p:" opt; do
       ;;
     o)
       out=$OPTARG
+      ;;
+    r)
+      frame_rate=$OPTARG
       ;;
     t)
       threads=$OPTARG
