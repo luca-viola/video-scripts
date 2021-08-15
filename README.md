@@ -22,7 +22,7 @@ the .mp4 will use the baseline profile and should be
 playable out of the box from chrome, edge, safari and
 Android/iOS devices.
 
-###Usage:
+### Usage:
 ```
   convert -i FILENAME
           [-s SIZE] (in mega bytes, ex. -s 80)
