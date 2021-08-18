@@ -249,7 +249,7 @@ function main()
   wait $pid 2>/dev/null 
   segments=$(echo "$video_duration/$duration" | bc)
   echo -e -n "\rDone, all segments processed.                     "
-  echo "Time elapsed: ${elapsed}"
+  echo "Time elapsed: ${elapsed} seconds"
   echo
 }
 
