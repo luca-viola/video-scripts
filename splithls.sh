@@ -60,7 +60,6 @@ function get_video_stats()
 function exclude_vertical_resolutions_bigger_than_default_ones()
 {
   split=0
-  #declare -a vertical_res
   for h in "${def_vertical_res[@]}"
   do
     if [[ $( echo "$height-$h" | bc ) -ge 0 ]]; then
@@ -72,8 +71,6 @@ function exclude_vertical_resolutions_bigger_than_default_ones()
 
 function calculate_horizontal_resolutions_with_aspect_ratio()
 {
-#  declare -a horizontal_res
-
   i=0
   for v in "${vertical_res[@]}"
   do
@@ -87,8 +84,6 @@ function calculate_horizontal_resolutions_with_aspect_ratio()
 
 function calculate_bit_rates()
 {
-  #declare -a bit_rates
-
   i=0
   for b in "${vertical_res[@]}"
   do
@@ -139,7 +134,6 @@ function generate_filters_to_resize_videos()
   filter_complex="$filter_complex${filter}"
   filter_complex=${filter_complex%?}
 }
-#echo "$filter_complex"
 
 function maps_filters_to_bitrates()
 {
@@ -159,7 +153,6 @@ function maps_filters_to_bitrates()
   done
   lines=${lines%??}
 }
-#echo "$lines"
 
 function generate_audio_and_stream_maps()
 {
@@ -175,8 +168,6 @@ function generate_audio_and_stream_maps()
   audio_map="${audio_map} -c:a aac -b:a 128k -ac 2"
 }
 
-#echo $audio_map
-#echo $stream_map
 function print_stats()
 {
   echo "--- $filename stats ---"
@@ -188,6 +179,8 @@ function print_stats()
   echo "bpp    : $bpp"
   echo
   echo "--- Target bit rates ---"
+  echo "Target bpp: ${target_bpp}"
+  echo
   print_bit_rates_stats
 }
 
@@ -249,7 +242,7 @@ function main()
   wait $pid 2>/dev/null 
   segments=$(echo "$video_duration/$duration" | bc)
   echo -e -n "\rDone, all segments processed.                     "
-  echo "Time elapsed: ${elapsed} seconds"
+  echo -e "\nTime elapsed: ${elapsed} seconds"
   echo
 }
 
