@@ -196,7 +196,7 @@ function progress()
   sleep 1
   segments=$(echo "$video_duration/$duration" | bc)
   current=0
-  while [[ $current -le $segments ]]; do
+  while [[ $current -lt $segments ]]; do
     current=$(ls -b stream_0 | cut -d "." -f 1 | awk '{print substr($0,5) }' | sort -n | tail -n 1 | bc)
     echo -e -n "\rSegment generation progress: $current / $segments"
     sleep 1
@@ -242,8 +242,10 @@ function main()
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
   echo "$cmd" > cmd.log
   sh -c "$cmd"
-  #echo "$cmd"
   kill -15 $pid
+  wait $pid 2>/dev/null 
+  segments=$(echo "$video_duration/$duration" | bc)
+  echo -e -n "\rDone, $segments segments processed.          "
   echo
 }
 
