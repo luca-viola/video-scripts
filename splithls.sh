@@ -248,7 +248,7 @@ function main()
   kill -15 $pid
   wait $pid 2>/dev/null 
   segments=$(echo "$video_duration/$duration" | bc)
-  echo -e -n "\rDone, $segments segments processed.          "
+  echo -e -n "\rDone, all segments processed.                     "
   echo "Time elapsed: ${elapsed}"
   echo
 }
