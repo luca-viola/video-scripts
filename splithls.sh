@@ -241,11 +241,15 @@ function main()
       -use_localtime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
   echo "$cmd" > cmd.log
+  start_time=$(date +%s)
   sh -c "$cmd"
+  end_time=$(date +%s)
+  elapsed=$(( end_time - start_time ))
   kill -15 $pid
   wait $pid 2>/dev/null 
   segments=$(echo "$video_duration/$duration" | bc)
   echo -e -n "\rDone, $segments segments processed.          "
+  echo "Time elapsed: ${elapsed}"
   echo
 }
 
