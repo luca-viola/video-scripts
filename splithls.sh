@@ -197,6 +197,21 @@ function progress()
   echo
 }
 
+function check_bit_rates
+{
+  idx=0
+  for i in "${bit_rates[@]}"
+  do
+     if [[ $i -gt $bitrate ]]; then
+       echo
+       echo "[WARNING] in ${horizontal_res[$idx]}x${vertical_res[$idx]} the bitrate is higher than the source ($i vs. $bitrate)"
+       echo "[WARNING] You might want to try a bpp < ${target_bpp} in the -b option"
+       echo
+     fi
+     ((idx=idx+1))
+  done
+}
+
 function main()
 {
   if [ -z "$filename" ]; then
@@ -213,9 +228,23 @@ function main()
   maps_filters_to_bitrates
   generate_audio_and_stream_maps
 
+  idx=0
+  for i in "${bit_rates[@]}"
+  do
+     echo "bitrate: $i / $bitrate"
+     if [[ $i -gt $bitrate ]]; then
+       echo
+       echo "WARNING!! ${horizontal_res[$idx]}x${vertical_res[$idx]} has a bitrate higher $i higher than original $bitrate"
+       echo
+     fi 
+     ((idx=idx+1))
+  done
+
   echo "* Splithls (C) by Luca Viola *"
   echo
   print_stats
+  echo
+  check_bit_rates
   echo
   progress &
   pid=$!
