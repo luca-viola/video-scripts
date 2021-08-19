@@ -228,18 +228,6 @@ function main()
   maps_filters_to_bitrates
   generate_audio_and_stream_maps
 
-  idx=0
-  for i in "${bit_rates[@]}"
-  do
-     echo "bitrate: $i / $bitrate"
-     if [[ $i -gt $bitrate ]]; then
-       echo
-       echo "WARNING!! ${horizontal_res[$idx]}x${vertical_res[$idx]} has a bitrate higher $i higher than original $bitrate"
-       echo
-     fi 
-     ((idx=idx+1))
-  done
-
   echo "* Splithls (C) by Luca Viola *"
   echo
   print_stats
@@ -275,7 +263,7 @@ function main()
   echo
 }
 
-while getopts ":r:a:b:d:i:o:t:p:" opt; do
+while getopts ":s:r:a:b:d:i:o:t:p:" opt; do
   case $opt in
     d)
       duration=$OPTARG
@@ -298,6 +286,21 @@ while getopts ":r:a:b:d:i:o:t:p:" opt; do
     t)
       threads=$OPTARG
       ;;
+    s)
+       url_sync=$OPTARG
+       if $(echo "$url_sync" | egrep -q "^(s3:|rsync:).*$"); then
+         has_sync=1 
+	 protocol=$(echo "$url_sync" | cut -d ":" -f 1)
+	 if [ "$protocol" == "rsync" ]; then
+	   url_sync=$(echo "$url_sync" | cut -d "/" -f 3-)
+         fi 
+	 echo $protocol
+	 echo $url_sync
+       else
+         echo -e "\nerror: the -s (sync) option supports only s3:// and rsync:// urls\n"
+	 exit 1 
+       fi
+       ;;
     p)
       vres=$OPTARG
 
