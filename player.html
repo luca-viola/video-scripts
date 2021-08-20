@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  </head>
+  <body>
+    <br />
+    <br />
+    <video style="width: 1024px;" id="player" controls autostart></video>
+    <script>
+      var video = document.getElementById('player');
+      var videoSrc = 'master.m3u8';
+      var config = {
+        autoStartLoad: true,
+        liveSyncDurationCount: 3
+      }
+      if (Hls.isSupported()) {
+        hls = new Hls(config);
+        hls.loadSource(videoSrc);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            video.play();
+            //video.currenTime = hls.liveSyncPosition
+
+        });
+      }
+      else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoSrc;
+        video.addEventListener('loadedmetadata', function() {
+            video.play();
+        });
+      }
+    </script>
+  </body>
+</html>
