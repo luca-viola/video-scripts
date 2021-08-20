@@ -6,6 +6,7 @@ out="stream"
 target_bpp=0.1
 audio_bit_rate=128
 def_vertical_res=(240 360 480 720 1080 1440 2160)
+work_dir="."
 declare -a vertical_res
 declare -a horizontal_res
 declare -a bit_rates
@@ -190,7 +191,7 @@ function progress()
   segments=$(echo "$video_duration/$duration" | bc)
   current=0
   while [[ $current -lt $segments ]]; do
-    current=$(ls -b stream_0 | cut -d "." -f 1 | awk '{print substr($0,5) }' | sort -n | tail -n 1 | bc)
+    current=$(ls -b $work_dir/stream_0 | cut -d "." -f 1 | awk '{print substr($0,5) }' | sort -n | tail -n 1 | bc)
     echo -e -n "\rSegment generation progress: $current / $segments"
     sleep 1
   done
@@ -247,9 +248,9 @@ function main()
        ${audio_map} \\
       -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \\
       -master_pl_name ${playlist} \\
-      -hls_segment_filename ${out}_%v/data%06d.ts \\
+      -hls_segment_filename $work_dir/${out}_%v/data%06d.ts \\
       -use_localtime_mkdir 1 \\
-      -var_stream_map \"${stream_map}\" ${out}_%v.m3u8"
+      -var_stream_map \"${stream_map}\" $work_dir/${out}_%v.m3u8"
   echo "$cmd" > cmd.log
   start_time=$(date +%s)
   sh -c "$cmd"
@@ -263,7 +264,7 @@ function main()
   echo
 }
 
-while getopts ":s:r:a:b:d:i:o:t:p:" opt; do
+while getopts ":w:s:r:a:b:d:i:o:t:p:" opt; do
   case $opt in
     d)
       duration=$OPTARG
@@ -299,6 +300,13 @@ while getopts ":s:r:a:b:d:i:o:t:p:" opt; do
        else
          echo -e "\nerror: the -s (sync) option supports only s3:// and rsync:// urls\n"
 	 exit 1 
+       fi
+       ;;
+    w)
+       work_dir=$OPTARG
+       if [ ! -d ${work_dir} ]; then
+          echo -e "\nWorking directoy ${work_dir} does not exists\n"
+          exit 1	  
        fi
        ;;
     p)
