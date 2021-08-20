@@ -306,7 +306,7 @@ while getopts ":w:s:r:a:b:d:i:o:t:p:" opt; do
        work_dir=$OPTARG
        if [ ! -d ${work_dir} ]; then
           echo -e "\nWorking directoy ${work_dir} does not exists\n"
-          exit 1	  
+          exit 1t
        fi
        ;;
     p)
