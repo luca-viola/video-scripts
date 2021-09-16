@@ -9,6 +9,7 @@ __pycache__/
 hls/
 .idea/
 videos/
+various/
 .DS_Store
 *.swp
 aws
