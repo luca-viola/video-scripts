@@ -213,7 +213,7 @@ function check_bit_rates
   done
 }
 
-function main()
+function splithls()
 {
   if [ -z "$filename" ]; then
     usage
@@ -264,72 +264,77 @@ function main()
   echo
 }
 
-while getopts ":w:s:r:a:b:d:i:o:t:p:" opt; do
-  case $opt in
-    d)
-      duration=$OPTARG
-      ;;
-    a)
-      audio_bit_rate=$OPTARG
-      ;;
-    b)
-      target_bpp=$OPTARG
-      ;;
-    i)
-      filename=$OPTARG
-      ;;
-    o)
-      out=$OPTARG
-      ;;
-    r)
-      frame_rate=$OPTARG
-      ;;
-    t)
-      threads=$OPTARG
-      ;;
-    s)
-       url_sync=$OPTARG
-       if $(echo "$url_sync" | egrep -q "^(s3:|rsync:).*$"); then
-         has_sync=1 
-	 protocol=$(echo "$url_sync" | cut -d ":" -f 1)
-	 if [ "$protocol" == "rsync" ]; then
-	   url_sync=$(echo "$url_sync" | cut -d "/" -f 3-)
-         fi 
-	 echo $protocol
-	 echo $url_sync
-       else
-         echo -e "\nerror: the -s (sync) option supports only s3:// and rsync:// urls\n"
-	 exit 1 
-       fi
-       ;;
-    w)
-       work_dir=$OPTARG
-       if [ ! -d ${work_dir} ]; then
-          echo -e "\nWorking directoy ${work_dir} does not exists\n"
-          exit 1t
-       fi
-       ;;
-    p)
-      vres=$OPTARG
+function main()
+{
+  local OPTIND opt
+  while getopts ":w:s:r:a:b:d:i:o:t:p:" opt; do
+    case $opt in
+      d)
+        duration=$OPTARG
+        ;;
+      a)
+        audio_bit_rate=$OPTARG
+        ;;
+      b)
+        target_bpp=$OPTARG
+        ;;
+      i)
+        filename=$OPTARG
+        ;;
+      o)
+        out=$OPTARG
+        ;;
+      r)
+        frame_rate=$OPTARG
+        ;;
+      t)
+        threads=$OPTARG
+        ;;
+      s)
+         url_sync=$OPTARG
+         if $(echo "$url_sync" | egrep -q "^(s3:|rsync:).*$"); then
+           has_sync=1
+     protocol=$(echo "$url_sync" | cut -d ":" -f 1)
+     if [ "$protocol" == "rsync" ]; then
+       url_sync=$(echo "$url_sync" | cut -d "/" -f 3-)
+           fi
+     echo $protocol
+     echo $url_sync
+         else
+           echo -e "\nerror: the -s (sync) option supports only s3:// and rsync:// urls\n"
+     exit 1
+         fi
+         ;;
+      w)
+         work_dir=$OPTARG
+         if [ ! -d ${work_dir} ]; then
+            echo -e "\nWorking directoy ${work_dir} does not exists\n"
+            exit 1
+         fi
+         ;;
+      p)
+        vres=$OPTARG
 
-      def_vertical_res=()
-      for i in $vres; do
-        def_vertical_res+=($i)
-      done
-      ;;
-    \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-    *)
-      usage
-      exit 1
-      ;;
-  esac
-done
+        def_vertical_res=()
+        for i in $vres; do
+          def_vertical_res+=($i)
+        done
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+      *)
+        usage
+        exit 1
+        ;;
+    esac
+  done
+  splithls "$filename"
+}
 
-main "$filename"
+main "$@"
