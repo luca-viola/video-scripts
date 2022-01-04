@@ -118,7 +118,7 @@ ffmpeg -y -i $FILE -c:v libx264 -profile:v baseline -b:v "$VBR"k -pass 1 -an -s 
 
 ffmpeg -i $FILE -c:v libx264 -profile:v baseline -b:v "$VBR"k -s "$W"x"$H" -pass 2 -pix_fmt yuv420p -strict -2 -c:a aac -b:a "$ABR"k -movflags faststart -threads $THREADS "$OUTFILE".mp4
 
-if [ $webm == "1" ]; then
+if [ "$webm" == "1" ]; then
   echo "********************************************"
   echo "*********** GENERATING WEBM FILE ***********"
   echo "********************************************"
