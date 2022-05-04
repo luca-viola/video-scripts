@@ -1,5 +1,24 @@
 #!/bin/bash
 
+codec="libx264"
+preset="-preset veryfast"
+if [ "$OS" == "Darwin" ]; then
+  codec="h264_videotoolbox"
+  preset=""
+else
+  model=$(cat /proc/device-tree/model 2> /dev/null | tr '[:upper:]' '[:lower:]' | awk '{ print $1 }')
+  if [ "$model" = "raspberry" ]; then
+    codec="h264_v4l2m2m"
+    preset=""
+  else
+    ffmpeg -loglevel error -f lavfi -i color=black:s=1080x1080 -vframes 1 -an -c:v hevc_nvenc -f null - 2> /dev/null
+    if [ $? -eq 0 ]; then
+      codec="h264_nvenc"
+      preset=""
+    fi
+  fi
+fi
+
 playlist="master.m3u8"
 duration=6
 out="stream"
@@ -43,7 +62,7 @@ function get_video_stats()
 {
   width=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "\.width=" | cut -d "=" -f 2)
   height=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "\.height=" | cut -d "=" -f 2)
-
+  frame_count=$(ffprobe -v error -select_streams v:0 -count_packets -show_entries stream=nb_read_packets -of csv=p=0 "$1")
   bitrate_bytes=$(ffprobe -loglevel error -show_format -show_streams "$1" -print_format flat | grep "format.bit_rate=" | cut -d "\"" -f 2)
   bitrate=$(echo "${bitrate_bytes}/1024" | bc)
 
@@ -147,7 +166,7 @@ function maps_filters_to_bitrates()
     max_rate=$( echo "${bit_rates[i]}+(${bit_rates[i]}*10/100)" | bc)
     buf_size=$( echo "${bit_rates[i]}*1.5" | bc | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}')
 
-    map="-map [vout${pad}] -c:v:${i} libx264 -b:v:${i} ${bit_rates[i]}k -maxrate:v:0 ${max_rate}k -bufsize:v:${i} ${buf_size}k"
+    map="-map [vout${pad}] -c:v:${i} ${codec} -b:v:${i} ${bit_rates[i]}k -maxrate:v:0 ${max_rate}k -bufsize:v:${i} ${buf_size}k"
     line="${map} \\${nl}"
     lines="${lines}${line}"
     ((i=i+1))
@@ -174,6 +193,7 @@ function print_stats()
   echo "--- $filename stats ---"
   echo "Width  : $width"
   echo "Height : $height"
+  echo "Frames : $frame_count"
   echo "bitrate: $bitrate"
   echo "fps    : $fps"
   echo "ratio  : $ratio"
@@ -181,6 +201,7 @@ function print_stats()
   echo
   echo "--- Target bit rates ---"
   echo "Target bpp: ${target_bpp}"
+  echo "codec: ${codec}"
   echo
   print_bit_rates_stats
 }
@@ -243,7 +264,7 @@ function splithls()
       -loglevel panic \\
       -threads $threads \\
       -filter_complex \"$filter_complex\" \\
-      -preset veryfast -r ${frame_rate} -g ${frame_rate} -sc_threshold 0 \\
+       ${preset} -r ${frame_rate} -g ${frame_rate} -sc_threshold 0 \\
        ${lines} \\
        ${audio_map} \\
       -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \\
@@ -256,11 +277,12 @@ function splithls()
   sh -c "$cmd"
   end_time=$(date +%s)
   elapsed=$(( end_time - start_time ))
+  fps_enc=$(echo "scale=2; ${frame_count}/${elapsed}" | bc -l)
   kill -15 $pid
   wait $pid 2>/dev/null 
   segments=$(echo "$video_duration/$duration" | bc)
   echo -e -n "\rDone, all segments processed.                     "
-  echo -e "\nTime elapsed: ${elapsed} seconds"
+  echo -e "\nTime elapsed: ${elapsed} seconds ($fps_enc frames/s)"
   echo
 }
 
