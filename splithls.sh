@@ -1,5 +1,7 @@
 #!/bin/bash
 
+OS=$(uname -s)
+
 codec="libx264"
 preset="-preset veryfast"
 if [ "$OS" == "Darwin" ]; then
