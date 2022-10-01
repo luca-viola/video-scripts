@@ -270,7 +270,6 @@ function splithls()
       -f hls -hls_time ${duration} -hls_playlist_type event -hls_flags independent_segments \\
       -master_pl_name ${playlist} \\
       -hls_segment_filename $work_dir/${out}_%v/data%06d.ts \\
-      -strftime 1 \\
       -strftime_mkdir 1 \\
       -var_stream_map \"${stream_map}\" $work_dir/${out}_%v.m3u8"
   echo "$cmd" > cmd.log
