@@ -117,8 +117,8 @@ codec="libx264"
 codec="h264_nvenc"
 
 ffmpeg -y -i $FILE -c:v ${codec} -profile:v baseline -b:v "$VBR"k -pass 1 -an -s "$W"x"$H" -pix_fmt yuv420p -threads $THREADS -f mp4 /dev/null
-
-ffmpeg -i $FILE -c:v ${codec} -profile:v baseline -b:v "$VBR"k -s "$W"x"$H" -pass 2 -pix_fmt yuv420p -strict -2 -c:a aac -b:a "$ABR"k -movflags faststart -threads $THREADS "$OUTFILE".mp4
+ 
+ffmpeg -y -i $FILE -c:v ${codec} -profile:v baseline -b:v "$VBR"k -s "$W"x"$H" -pass 2 -pix_fmt yuv420p -strict -2 -c:a aac -b:a "$ABR"k -movflags faststart -threads $THREADS "$OUTFILE".mp4
 
 if [ "$webm" == "1" ]; then
   echo "********************************************"
