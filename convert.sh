@@ -97,6 +97,25 @@ let "BUFSIZE=(VBR*2)"
 let "WEBMAXSIZEPASS2=(VBR+ABR)"
 let "WEBBUFSIZEPASS2=(WEBMAXSIZEPASS2*2)"
 
+codec="libx264"
+preset="-preset veryfast"
+if [ "$OS" == "Darwin" ]; then
+  codec="h264_videotoolbox"
+  preset=""
+else
+  model=$(cat /proc/device-tree/model 2> /dev/null | tr '[:upper:]' '[:lower:]' | awk '{ print $1 }')
+  if [ "$model" = "raspberry" ]; then
+    codec="h264_v4l2m2m"
+    preset=""
+  else
+    ffmpeg -loglevel error -f lavfi -i color=black:s=1080x1080 -vframes 1 -an -c:v hevc_nvenc -f null - 2> /dev/null
+    if [ $? -eq 0 ]; then
+      codec="h264_nvenc"
+      preset=""
+    fi
+  fi
+fi
+
 echo "Starting conversion"
 echo "Input:           $FILE"
 echo "Output:          $OUTFILE"
@@ -107,14 +126,14 @@ echo "Final size:      $SIZE mb"
 echo "Audio bitrate:   $ABR kb/s"
 echo "Video bitrate:   $VBR kb/s"
 echo "Threads:         $THREADS"
+echo "Codec:           $codec"
 echo
 echo
+
+
 echo "*******************************************"
 echo "*********** GENERATING MP4 FILE ***********"
 echo "*******************************************"
-
-codec="libx264"
-codec="h264_nvenc"
 
 ffmpeg -y -i $FILE -c:v ${codec} -profile:v baseline -b:v "$VBR"k -pass 1 -an -s "$W"x"$H" -pix_fmt yuv420p -threads $THREADS -f mp4 /dev/null
  
